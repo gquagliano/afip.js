@@ -276,69 +276,6 @@ Afip.prototype.CreateServiceTA = async function(service) {
 	}));
 }
 
-
-/**
- * Track SDK usage
- * 
- * @param string web_service ID of the web service used
- * @param string operation SOAP operation called 
- * @param array params Parameters for the ws
- * @private
- **/
-Afip.prototype.TrackUsage = async function(web_service, operation, params = {}) {
-	options = {};
-
-	if (web_service === 'wsfe' && operation === 'FECAESolicitar') {
-		if (params['FeCAEReq'] && params['FeCAEReq']['FeCabReq'] && params['FeCAEReq']['FeCabReq']['CbteTipo']) {
-			options['CbteTipo'] = params['FeCAEReq']['FeCabReq']['CbteTipo'];
-		}
-
-		if (params['FeCAEReq'] && params['FeCAEReq']['FeDetReq'] && params['FeCAEReq']['FeDetReq']['FECAEDetRequest'] && params['FeCAEReq']['FeDetReq']['FECAEDetRequest']['ImpTotal']) {
-			options['ImpTotal'] = params['FeCAEReq']['FeDetReq']['FECAEDetRequest']['ImpTotal'];
-		}
-	}
-
-	try {
-		this.mixpanel.track(web_service+'.'+operation, Object.assign({}, this.mixpanelRegister, options));
-	} catch (e) {}
-
-	if (!this.AdminClient && this.options['production'] === true) {
-		/** @private */
-		this.AdminClient = axios.create({
-			baseURL: 'https://app.afipsdk.com/api/',
-			timeout: 10000
-		});
-	
-		this.AdminClient.defaults.headers.common['sdk-version-number'] = '0.7.8';
-		this.AdminClient.defaults.headers.common['sdk-library'] = 'javascript';
-
-		if (this.options['access_token']) {
-			this.AdminClient.defaults.headers.common['Authorization'] = `Bearer ${this.options['access_token']}`;
-		}
-	
-		try {
-			await this.AdminClient.post('v1/sdk-events', {
-				"name": "initialized",
-				"properties": {
-					"environment": this.options['production'] === true ? "prod" : "dev",
-					"tax_id": `${this.options['CUIT']}`,
-					"afip_sdk_library": "javascript"
-				}
-			});
-		} catch (error) {
-			if (!error.response) {
-				throw error;
-			}
-			else if (error.response.data && error.response.data.message) {
-				throw Object.assign(new Error(error.response.data.message), error.response.data);
-			}
-			else {
-				throw Object.assign(new Error(error.response.statusText), error.response);
-			}
-		}
-	}
-}
-
 /**
  * Create generic Web Service
  * 
