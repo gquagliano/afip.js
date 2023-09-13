@@ -157,7 +157,7 @@ Afip.prototype.GetServiceTA = async function(service, firstTry = true) {
 
 	// If have access to token authorization file
 	if (!taFileAccessError) {
-		const taData = require(taFilePath);
+		const taData = fs.readFileSync(taFilePath, "utf-8");
 		const actualTime = new Date(Date.now() + 600000);
 		const expirationTime = new Date(taData.header[1].expirationtime);
 
