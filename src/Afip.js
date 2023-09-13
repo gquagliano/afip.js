@@ -161,9 +161,6 @@ Afip.prototype.GetServiceTA = async function(service, firstTry = true) {
 		const actualTime = new Date(Date.now() + 600000);
 		const expirationTime = new Date(taData.header[1].expirationtime);
 
-		// Delete TA cache
-		delete require.cache[require.resolve(taFilePath)];
-
 		if (actualTime < expirationTime) {
 			// Return token authorization
 			return {
